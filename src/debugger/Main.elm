@@ -443,28 +443,44 @@ update msg state =
         ( state, sendTask |> task )
 
     SessionInputErrorMessage error ->
-      ( { state | errorState = SessionInputError error }, none )
+      ( { state | errorState = SessionInputError error }
+      , Effects.task
+          (Signal.send importSessionErrorsMailbox.address ()
+            |> Task.map (always NoOp))
+      )
 
     CommandResponse responseMsg ->
       let
-        newErrorState =
+        (newErrorState, sendToPortTask) =
           case responseMsg of
             Active.SwapReplayError replayError ->
-              SwapReplayError replayError
+              ( SwapReplayError replayError
+              , Signal.send swapErrorsMailbox.address ()
+              )
 
             Active.SwapSuccessful ->
-              NoErrors
+              ( NoErrors
+              , Task.succeed ()
+              )
 
             Active.HistoryMismatchError moduleNames ->
-              HistoryMismatchError moduleNames
+              ( HistoryMismatchError moduleNames
+              , Signal.send swapErrorsMailbox.address ()
+              )
 
             Active.ImportSessionSuccessful ->
-              NoErrors
+              ( NoErrors
+              , Task.succeed ()
+              )
 
             Active.NoOpResponse ->
-              state.errorState
+              ( state.errorState
+              , Task.succeed ()
+              )
       in
-        ( { state | errorState = newErrorState }, none )
+        ( { state | errorState = newErrorState }
+        , Effects.task (sendToPortTask |> Task.map (always NoOp))
+        )
 
     CloseErrors ->
       ( { state | errorState = NoErrors }, none )
@@ -479,14 +495,37 @@ socketEventsMailbox : Signal.Mailbox Message
 socketEventsMailbox =
   Signal.mailbox NoOp
 
--- INPUT PORT: initial module
+-- INPUT PORTS
 
+-- initial module
 port moduleName : DM.ModuleName
 
 port fileName : String
 
 -- would be nice to get this from a library
 port windowLocationHost : String
+
+
+-- OUTPUT PORTS
+
+importSessionErrorsMailbox : Signal.Mailbox ()
+importSessionErrorsMailbox =
+  Signal.mailbox ()
+
+
+port importSessionErrors : Signal ()
+port importSessionErrors =
+  importSessionErrorsMailbox.signal
+
+
+swapErrorsMailbox : Signal.Mailbox ()
+swapErrorsMailbox =
+  Signal.mailbox ()
+
+
+port swapErrors : Signal ()
+port swapErrors =
+  swapErrorsMailbox.signal
 
 
 connectSocket : Task Never Message

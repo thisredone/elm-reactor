@@ -1,7 +1,6 @@
 module Debugger.Reflect
     ( ElmValue(..)
     , SeqType(..)
-    , getHtml
     , toElmValue
     )
     where

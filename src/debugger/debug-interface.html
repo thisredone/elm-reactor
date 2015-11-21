@@ -7,10 +7,17 @@
 	</head>
 	<body style="margin: 0;">
 		<script type="text/javascript">
-			Elm.fullscreen(Elm.Main, {
+			var debuggeeInfo = window.opener.MODULE_INFO;
+			var debuggerUi = Elm.fullscreen(Elm.Main, {
 				windowLocationHost: window.location.host,
-				moduleName: window.opener.MODULE_INFO.moduleName,
-				fileName: window.opener.MODULE_INFO.fileName
+				moduleName: debuggeeInfo.moduleName,
+				fileName: debuggeeInfo.fileName
+			});
+			debuggerUi.ports.sessionImportErrors.subscribe(function(error) {
+				debuggeeInfo.agentUi.ports.sessionImportErrors.send(error);
+			});
+			debuggerUi.ports.swapErrors.subscribe(function(error) {
+				debuggeeInfo.agentUi.ports.swapErrors.send(error);
 			});
 		</script>
 	</body>

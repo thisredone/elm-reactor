@@ -15,9 +15,14 @@ Elm.fullscreenDebug = function(moduleName, fileName) {
 	var debuggerWindow =
 		window.open('/_reactor/debug-interface.html', 'Debugger', 'width=500;height=800');
 
+	var agentUiContainer = document.createElement('div');
+	document.body.appendChild(agentUiContainer);
+	var agentUi = Elm.embed(Elm.AgentMain, agentUiContainer);
+
 	window.MODULE_INFO = {
 		moduleName: moduleName,
-		fileName: fileName
+		fileName: fileName,
+		agentUi: agentUi
 	}
 
 	// ignore events on event blocker
