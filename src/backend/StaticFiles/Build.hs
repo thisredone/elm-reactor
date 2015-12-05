@@ -16,9 +16,29 @@ import System.Process (readProcessWithExitCode)
 -- READ STATIC FILES
 
 
+debuggerAgentWrapper :: IO BS.ByteString
+debuggerAgentWrapper =
+  BS.readFile ("src" </> "debugger" </> "debug-agent.js")
+
+
+debuggerAgentMain :: IO BS.ByteString
+debuggerAgentMain =
+  let
+    tempFile =
+      "temp-debug.js"
+  in
+    do  compile ("src" </> "debugger" </> "AgentMain.elm") tempFile
+        result <- BS.readFile tempFile
+        seq (BS.length result) (removeFile tempFile)
+        return result
+
+
 debuggerAgent :: IO BS.ByteString
 debuggerAgent =
-  BS.readFile ("src" </> "debugger" </> "debug-agent.js")
+  do
+    wrapper <- debuggerAgentWrapper
+    main <- debuggerAgentMain
+    return (wrapper `BS.append` main)
 
 
 debuggerInterfaceHtml :: IO BS.ByteString

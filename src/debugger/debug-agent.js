@@ -17,7 +17,10 @@ Elm.fullscreenDebug = function(moduleName, fileName) {
 
 	var agentUiContainer = document.createElement('div');
 	document.body.appendChild(agentUiContainer);
-	var agentUi = Elm.embed(Elm.AgentMain, agentUiContainer);
+	var agentUi = Elm.embed(Elm.AgentMain, agentUiContainer, {
+		importSessionErrors: [],
+		swapErrors: []
+	});
 
 	window.MODULE_INFO = {
 		moduleName: moduleName,

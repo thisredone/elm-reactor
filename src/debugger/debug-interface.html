@@ -13,8 +13,8 @@
 				moduleName: debuggeeInfo.moduleName,
 				fileName: debuggeeInfo.fileName
 			});
-			debuggerUi.ports.sessionImportErrors.subscribe(function(error) {
-				debuggeeInfo.agentUi.ports.sessionImportErrors.send(error);
+			debuggerUi.ports.importSessionErrors.subscribe(function(error) {
+				debuggeeInfo.agentUi.ports.importSessionErrors.send(error);
 			});
 			debuggerUi.ports.swapErrors.subscribe(function(error) {
 				debuggeeInfo.agentUi.ports.swapErrors.send(error);
