@@ -228,14 +228,18 @@ Elm.fullscreenDebug = function(moduleName, fileName) {
 	};
 
 	// handle swaps
-	var updates = 'ws://' + window.location.host + '/socket?file=' + fileName
+	var updates = 'ws://' + window.location.host
 	var connection = new WebSocket(updates);
 	connection.addEventListener('message', function(event) {
-		if (result.debugState.permitSwaps)
-		{
-			result = swap(event.data, result);
-			updateWatches(result.debugState.index);
-		}
+		var msg = JSON.parse(event.data);
+	    if (msg.isCss) {
+	      document.getElementById('page-style').href = "style.css?t=" + new Date().getMilliseconds();
+	    } else {
+	      if (result.debugState.permitSwaps) {
+	        result = swap(msg, result);
+	        updateWatches(result.debugState.index);
+	      }
+	    }
 	});
 	window.addEventListener("unload", function() {
 		connection.close();
@@ -414,15 +418,13 @@ function jumpTo(index, debugState)
 	redoTraces(debugState);
 }
 
-function swap(rawJsonResponse, oldResult)
+function swap(response, oldResult)
 {
 	var error = document.getElementById(ERROR_MESSAGE_ID);
 	if (error)
 	{
 		error.parentNode.removeChild(error);
 	}
-
-	var response = JSON.parse(rawJsonResponse);
 
 	if (!response.code)
 	{
@@ -441,6 +443,8 @@ function swap(rawJsonResponse, oldResult)
 
 	var result = initModuleWithDebugState(response.name);
 	transferState(oldResult.debugState, result.debugState);
+	removeEventBlocker();
+	result.debugState.paused = false;
 	return result;
 }
 
@@ -721,7 +725,9 @@ function flattenSignalGraph(nodes)
 	function addAllToDict(node)
 	{
 		nodesById[node.id] = node;
-		node.kids.forEach(addAllToDict);
+		if(node.kids) {
+	    	node.kids.forEach(addAllToDict);
+	  	}
 	}
 	nodes.forEach(addAllToDict);
 
